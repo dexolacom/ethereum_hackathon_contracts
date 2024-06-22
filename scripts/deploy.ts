@@ -23,6 +23,13 @@ async function main() {
 
     await biscuitV1.setPortfolioManager(portfolioManager.target);
 
+    const BiscuitV2Factory = await ethers.getContractFactory("BiscuitV2", signer);
+    const biscuitV2 = await BiscuitV2Factory.deploy(signer);
+    await biscuitV2.waitForDeployment();
+
+    const SignatureHelperFactory = await ethers.getContractFactory("SignatureHelper", signer);
+    const signatureHelper = await SignatureHelperFactory.deploy();
+    await signatureHelper.waitForDeployment();
 
     await run("verify:verify", {
         address: SwapLibrary.target,
@@ -39,10 +46,22 @@ async function main() {
         constructorArguments: [signer, biscuitV1.target],
     });
 
+    await run("verify:verify", {
+        address: biscuitV2.target,
+        constructorArguments: [signer.address],
+    });
+
+    await run("verify:verify", {
+        address: signatureHelper.target,
+        constructorArguments: [],
+    });
+
     const result = {
         SwapLibrary: SwapLibrary.target,
         biscuitV1: biscuitV1.target,
         portfolioManager: portfolioManager.target,
+        biscuitV2: biscuitV2.target,
+        signatureHelper: signatureHelper.target
     };
 
     fs.writeFileSync("DeployedAddresses.json", JSON.stringify(result, null, 2));
